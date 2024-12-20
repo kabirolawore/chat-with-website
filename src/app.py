@@ -21,21 +21,14 @@ if "chat_history" not in st.session_state:
     ]
 
 
-
 # User input
 user_query = st.chat_input("Ask a question about the  website")
 if user_query is not None and user_query != "":
     st.session_state.chat_history.append(HumanMessage(content=user_query))
     st.session_state.chat_history.append(AIMessage(content=get_response(user_query)))
-    # with st.chat_message("Human"):
-    #     st.write(user_query)
-    # response = get_response(user_query)
-    # with st.chat_message("AI"):
-    #     st.write(response)
-
-
-# with st.chat_message("Human"):
-#     st.write("I want to know about the weather in New York")
+    # with st.spinner("Thinking..."):
+    #     st.write(get_response(user_query))
+    
 
 # Sidebar
 with st.sidebar:
@@ -44,8 +37,14 @@ with st.sidebar:
     st.write(website_url)
     st.write(st.session_state.chat_history)
 
-# Conversation
+if not website_url:
+    st.info("Please enter a website url")
+
+# conversation
 for message in st.session_state.chat_history:
-    if isinstance(message, HumanMessage):
+    if isinstance(message, AIMessage):
+        with st.chat_message("AI"):
+            st.write(message.content)
+    elif isinstance(message, HumanMessage):
         with st.chat_message("Human"):
             st.write(message.content)

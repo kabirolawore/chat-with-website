@@ -2,6 +2,9 @@ import streamlit as st
 # from langchain.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_community.document_loaders import WebBaseLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings
 
 
 def get_response(user_input):
@@ -11,9 +14,22 @@ def get_response(user_input):
 def get_vectorstore_from_url(url):
     # get the text in document form
     loader = WebBaseLoader(url)
-    docs = loader.load()
+    doc = loader.load()
 
-    return docs
+    # Split documents
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=200
+    )
+    doc_chunks = text_splitter.split_documents(doc)
+
+    # create a vector store from the chunks
+    vector_store = Chroma.from_documents(
+        doc_chunks,
+        embedding=OpenAIEmbeddings()
+    )
+
+    return vector_store
 
 
 # app config
@@ -40,9 +56,9 @@ with st.sidebar:
 if not website_url:
     st.info("Please enter a website url")
 else:
-    documents = get_vectorstore_from_url(website_url)
+    document_chunks = get_vectorstore_from_url(website_url)
     with st.sidebar:
-        st.write(documents)
+        st.write(document_chunks)
 
     # User input
     user_query = st.chat_input("Ask a question about the  website")
